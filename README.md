@@ -1,10 +1,10 @@
-# Solaris patches on FS-UAE 3.1.66
+#  FS-UAE 3.1.66 patches required to run on Trbblix/OpenIndiana/Solaris
 
 Welcome,
 
 the purpose of these patches is getting FS-UAE 3.1.66 compiled on Solaris based distributions.
 
-The patches and testing has been done on #tribblix an Solaris/OpenSolaris/Illumos based x86 operating sytem.
+The patches and testing has been done on #tribblix (http://www.tribblix.org/), release 0m26 an Solaris/OpenSolaris/Illumos based x86 operating sytem.
 
 # Limitations:
 
