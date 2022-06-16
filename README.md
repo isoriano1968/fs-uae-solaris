@@ -2,7 +2,7 @@
 
 Welcome,
 
-the purpose of these patches is get FS-UAE 3.1.66 compiled on Solaris based distributions.
+the purpose of these patches is getting FS-UAE 3.1.66 compiled on Solaris based distributions.
 
 The patches and testing has been done on #tribblix an Solaris/OpenSolaris/Illumos based x86 operating sytem.
 
@@ -29,7 +29,9 @@ Apply these patches directly when you have downloaded the fs-uae sources from ht
 # Howto apply patches
 
 Makefile.am.patch.txt
+
 Makefile.in.patch.txt
+
 configure.ac.patch.txt
 
 belong into the root directory of the fs-uae sources
@@ -39,13 +41,21 @@ sysdeps.h.patch.txt
 belongs into src/include of the fs-uae sources
 
 ip_icmp.h.patch.txt
+
 debug.h.h.patch.txt
+
 mbuf.h.patch.txt
+
 misc.h.patch.txt
+
 sbuf.h.patch.txt
+
 slirp.h.patch.txt
+
 socket.h.patch.txt
+
 tcp_timer.h.patch.txt
+
 udp.h.patch.txt
 
 belong into src/slirp of the fs-uae sources
@@ -64,11 +74,17 @@ make install
 
 ./fs-uae 
   --floppy-drive-0=xxxxx
+  
   --kickstart-file=xxxxx
+  
   --amiga-model=(A500/A1200/A4000) select one of them 
+  
   --chip-memory=2048
+  
   --fast-memory=8192
+  
   --floppy-drive-count=4
+  
   --hard-drive-0=(insert your hdf file here mine is PRODRIVE80.hdf) 
   
   
