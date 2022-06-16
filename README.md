@@ -55,7 +55,9 @@ Copy the solaris folder into the dist folder of the fs-uae sources.
 # Building fs-uae for Solaris 
 
 ./configure --disable-jit
+
 make
+
 make install
 
 # Running fs-uae once you have build it there are several command line parameters
