@@ -1,4 +1,4 @@
-#  FS-UAE 3.1.66 patches required to run on Trbblix/OpenIndiana/Solaris
+#  FS-UAE 3.1.66 patches required to run on Tribblix/OpenIndiana/Solaris
 
 Welcome,
 
