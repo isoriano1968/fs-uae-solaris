@@ -73,6 +73,7 @@ make install
 # Running fs-uae once you have build it there are several command line parameters
 
 ./fs-uae 
+
   --floppy-drive-0=xxxxx
   
   --kickstart-file=xxxxx
