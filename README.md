@@ -6,6 +6,9 @@ the purpose of these patches is getting FS-UAE 3.1.66 compiled on Solaris based 
 
 The patching and testing has been done on #tribblix (http://www.tribblix.org/), release 0m26 an Solaris/OpenSolaris/Illumos based x86 operating sytem.
 
+!(https://ibb.co/0G4TjcB)
+!(https://ibb.co/VN4Lt8k)
+
 # Limitations:
 
 Due to not implemented exception handling for Solaris in fs-uae, the jit runtime of fs-uae cannot be used on Solaris based operating systems (please feel free to have a look on src/jit of the fs-uae package and add the missing capabilities :-)) You have to exclude jit in your ./configure parameters
