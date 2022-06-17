@@ -6,8 +6,8 @@ the purpose of these patches is getting FS-UAE 3.1.66 compiled on Solaris based 
 
 The patching and testing has been done on #tribblix (http://www.tribblix.org/), release 0m26 an Solaris/OpenSolaris/Illumos based x86 operating sytem.
 
-!(https://ibb.co/0G4TjcB)
-!(https://ibb.co/VN4Lt8k)
+![FS-UAE QTX Demo](https://ibb.co/0G4TjcB)
+![FS-UAE WORKBENCH](https://ibb.co/VN4Lt8k)
 
 # Limitations:
 
