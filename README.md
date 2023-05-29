@@ -1,17 +1,18 @@
 #  FS-UAE 3.1.66 patches required to run on Tribblix/OpenIndiana/Solaris
 
+** UPDATE: 29.05.2023 
+**
+** Updated to compile on Solaris 11.4.42 CBE
+
 Welcome,
 
 the purpose of these patches is getting FS-UAE 3.1.66 compiled on Solaris based distributions.
 
 The patching and testing has been done on #tribblix (http://www.tribblix.org/), release 0m26 an Solaris/OpenSolaris/Illumos based x86 operating sytem.
 
-![FS-UAE QTX Demo](https://i.ibb.co/QKSLFf8/Bildschirmfoto-2022-06-15-um-18-32-44.png)
-![FS-UAE WORKBENCH](https://i.ibb.co/7zmSXF0/Bildschirmfoto-2022-06-15-um-23-07-40.png))
-
 # Limitations:
 
-Due to not implemented exception handling for Solaris in fs-uae, the jit runtime of fs-uae cannot be used on Solaris based operating systems (please feel free to have a look on src/jit of the fs-uae package and add the missing capabilities :-)) You have to exclude jit in your ./configure parameters
+Due to not implemented exception handling for OpenSolaris-based systems  in fs-uae, the jit runtime of fs-uae cannot be used on Solaris based operating systems (please feel free to have a look on src/jit of the fs-uae package and add the missing capabilities :-)) You have to exclude jit in your ./configure parameters
 
 ./configure --disable-jit
 
@@ -21,7 +22,7 @@ fs-uae 3.1.66 requires at least (I assume OpenGL and several other libs as de fa
 
 msgfmt sdl2 openal libmpeg2 libmpeg2convert (you can use the libmpeg2 sources within the fs-uae package to build the missing libs)
 
-which should usually be part of either a package or overlay of your Solaris distribution.
+which should usually be part of either a package or overlay of your Solaris distribution (which in the case of native Solaris 11.4.42 CBE is not the case, you have to source the packages from the respective sites and build yourself).
 
 # Patches:
 
@@ -65,7 +66,14 @@ belong into src/slirp of the fs-uae sources
 
 Copy the solaris folder into the dist folder of the fs-uae sources.
 
+** Solaris 11.4.42 CBE does not use endian.h but instead relies on byteorder.h so you have to update src/scp.cpp and libfsemu/src/data.c with the following updates:
+**
+**
+
+
 # Building fs-uae for Solaris 
+
+Before running configure do a "ac-local", "automake" to re-generate the correct "./configure and make" files then
 
 ./configure --disable-jit
 
