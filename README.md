@@ -2,7 +2,7 @@
 
 ** UPDATE: 29.05.2023 
 **
-** Updated to compile on Solaris 11.4.42 CBE
+** Updated to compile on Solaris 11.4.42 CBE (x86), looking for someone to test on SPARC.
 
 Welcome,
 
