@@ -67,7 +67,9 @@ belong into src/slirp of the fs-uae sources
 Copy the solaris folder into the dist folder of the fs-uae sources.
 
 ** Solaris 11.4.42 CBE does not use endian.h but instead relies on byteorder.h so you have to update src/scp.cpp and libfsemu/src/data.c with the following updates:
-**
+
+** add <sys/byteorder.h> and the two defines : #define le16toh(x) ntohs(x) #define le32toh(x) ntohl(x)
+
 ** I forgot one patch which is adding <sys/filio.h> to "src/od-fs/bsdsocket_posix.cpp" to prevent FIONREAD compilation errors
 
 
