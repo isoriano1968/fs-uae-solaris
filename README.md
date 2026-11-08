@@ -78,9 +78,25 @@ Kickstart: A1200 with a 68040, 32-bit addressing, 8 MB fast and 64 MB Z3
 RAM, `jit_compiler = 1`: the log shows "JIT: Installing segfault handler",
 the translation cache at 42000000-42800000, natmem reserved at 0x80000000
 ("Z3 REAL mapping. JIT direct compatible"), and the emulation runs until a
-clean shutdown.  A benchmark against the interpreter (SysInfo, AIBB with a
-real Kickstart) is still to be done.  On illumos the same code path applies
-but has not been tested yet.
+clean shutdown.  On illumos the same code path applies but has not been
+tested yet.
+
+### How much faster
+
+A boot block that runs 100 million iterations of a five-instruction integer
+loop (add, eor, rol, subq, bne), timed between two bytes it writes to the
+serial port; Kickstart 3.2 (47.115), A1200 with a 68040, 32-bit addressing,
+`uae_cpu_speed = max`, warp mode:
+
+| Machine | FS-UAE | Interpreter | JIT | JIT gain |
+|---|---|---|---|---|
+| Linux laptop, Xeon E-2176M | 3.2.35 (Debian) | 11.1 - 11.5 s | 3.0 - 3.1 s | 3.7x |
+| Solaris 11.4 in VirtualBox, Xeon Gold 6132 host | 3.1.66 with these patches | 92.9 - 95.7 s | 22.5 - 23.1 s | 4.1x |
+
+The JIT gives Solaris the same gain as Linux, about four times the
+interpreter's speed on integer code.  The absolute difference between the
+two rows is mostly the virtual machine, not Solaris or FS-UAE: a plain C
+version of the same loop runs 2-3x slower in that VM than on its own host.
 
 The JIT is used only when a configuration asks for it:
 
