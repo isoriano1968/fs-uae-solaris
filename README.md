@@ -1,113 +1,122 @@
-#  FS-UAE 3.1.66 patches required to run on Tribblix/OpenIndiana/Solaris
+# FS-UAE 3.1.66 on Solaris 11.4 and illumos
 
-** UPDATE: 29.05.2023 
-**
-** Updated to compile on Solaris 11.4.42 CBE (x86), looking for someone to test on SPARC.
+Patches to build [FS-UAE](https://fs-uae.net/) 3.1.66, the Amiga emulator,
+on Oracle Solaris 11.4 (x86) and the illumos distributions (OpenIndiana,
+Tribblix, OmniOS).
 
-Welcome,
+The same patches are in [oi-userland](https://github.com/OpenIndiana/oi-userland/tree/oi/hipster/components/encumbered/fs-uae)
+as the OpenIndiana package `emulators/fs-uae`, and in a solaris-userland
+style component for Solaris 11.4 (IPS package `emulators/fs-uae`).
 
-the purpose of these patches is getting FS-UAE 3.1.66 compiled on Solaris based distributions.
+## What is here
 
-The patching and testing has been done on #tribblix (http://www.tribblix.org/), release 0m26 an Solaris/OpenSolaris/Illumos based x86 operating sytem (and as of today (29.05.2023) as well on Solaris 11.4.42 CBE x86)
+| Path | What |
+|---|---|
+| `patches/` | the patch series, in order, all `-p1` from the top of the fs-uae source tree |
+| `dist/solaris/` | the packaging scripts `configure.ac` refers to (copied from `dist/linux`) |
 
-# Limitations:
+| Patch | Why |
+|---|---|
+| 0001-configure-ac-solaris | `configure.ac`: a Solaris/SunOS case (`-DSOLARIS`) and `dist/solaris/Makefile` |
+| 0002-makefile-am-msgfmt | `Makefile.am`: `msgfmt -o file -v`, the argument order Solaris' own msgfmt accepts |
+| 0003-sysdeps | `uae_s8` as `int8_t`: Solaris' `int8_t` is plain `char`, not `signed char`, and the two must be the same type |
+| 0004 … 0012 slirp | slirp's headers use an old `_P((...))` prototype macro; Solaris' `<ctype.h>` defines `_P` itself, so the prototypes are written out |
+| 0013-bsdsocket-fionread | `FIONREAD` is in `<sys/filio.h>` on Solaris and illumos |
+| 0014-endian-solaris | Solaris 11 has no `<endian.h>`: `le16toh()` and friends from `<sys/byteorder.h>`; illumos has `<endian.h>` and is unaffected |
 
-Due to not implemented exception handling for OpenSolaris-based systems  in fs-uae, the jit runtime of fs-uae cannot be used on Solaris based operating systems (please feel free to have a look on src/jit of the fs-uae package and add the missing capabilities :-)) You have to exclude jit in your ./configure parameters
+## Building
 
-./configure --disable-jit
+You need gcc/g++, GNU make, autoconf, automake, libtool, pkg-config,
+gettext (msgfmt), glib2, libpng, zlib, freetype, X11/OpenGL, **SDL2** and
+**OpenAL**. On OpenIndiana all of them are packages. Oracle Solaris 11.4 has
+no SDL2 and no OpenAL: build them first (SDL2 2.32.10 with
+`./configure --disable-rpath --enable-static=no`, openal-soft 1.23.1 with
+CMake), as oi-userland's `library/SDL2` and `multimedia/openal` do.
+libmpeg2 is not packaged on Solaris either; use the copy inside fs-uae
+(`--with-libmpeg2=builtin`).
 
-Dependencies:
+```sh
+gtar xf fs-uae-3.1.66.tar.xz
+cd fs-uae-3.1.66
+for p in ../fs-uae-solaris/patches/*.patch; do gpatch -p1 < "$p"; done
+mkdir -p dist/solaris && cp ../fs-uae-solaris/dist/solaris/* dist/solaris/
+autoreconf -fi
+PATH=/usr/gnu/bin:$PATH \
+CC="gcc -m64" CXX="g++ -m64" \
+PKG_CONFIG_PATH=/usr/lib/amd64/pkgconfig \
+LDFLAGS="-lsocket -lnsl" \
+./configure --prefix=/usr --enable-jit --with-libmpeg2=builtin
+gmake -j8
+gmake install DESTDIR=/tmp/fs-uae-proto
+```
 
-fs-uae 3.1.66 requires at least (I assume OpenGL and several other libs as de facto installed but ./configure will tell you what you are missing)
+`autoreconf -fi` is required: the patches change `configure.ac` and
+`Makefile.am`, and `configure`/`Makefile.in` are regenerated from them.
+`-lsocket -lnsl` go into `LDFLAGS`: Solaris keeps the socket API in those
+libraries.
 
-msgfmt sdl2 openal libmpeg2 libmpeg2convert (you can use the libmpeg2 sources within the fs-uae package to build the missing libs)
+## The JIT
 
-which should usually be part of either a package or overlay of your Solaris distribution (which in the case of native Solaris 11.4.42 CBE is not the case, you have to source the packages from the respective sites and build yourself).
+The earlier version of this README said the JIT could not be used because
+exception handling was missing for Solaris.  That is not so for 3.1.66:
+FS-UAE's JIT builds and runs on Solaris 11.4 **without any source change**;
+configure with `--enable-jit` instead of `--disable-jit`.
 
-# Patches:
+- The JIT's SIGSEGV handler (`src/jit/exception_handler.cpp`) uses the
+  generic `ucontext` / `uc_mcontext.gregs[REG_RIP]` path, which Solaris
+  provides; configure finds it (`HAVE_STRUCT_UCONTEXT_UC_MCONTEXT_GREGS`).
+- The translation cache must lie below 2 GB.  Linux uses `MAP_32BIT`; on
+  other systems FS-UAE walks mmap address hints, and Solaris honours them:
+  the cache lands at 0x42000000.  (Solaris' own `MAP_LOW32` is no help: it
+  only promises below 4 GB.)
+- `PROT_EXEC` on mmap'ed memory is allowed (Solaris' NXHEAP/NXSTACK
+  protect brk memory and the stack, not explicit mappings).
+- configure adds `-fno-pie` / `-no-pie` itself when the JIT is on.
 
-Within the patches folder you will find the list of patches to get fs-uae up and running on Solaris based operating systems.
+Tested on Solaris 11.4 (11.4.90) under Xvfb with FS-UAE's built-in AROS
+Kickstart: A1200 with a 68040, 32-bit addressing, 8 MB fast and 64 MB Z3
+RAM, `jit_compiler = 1`: the log shows "JIT: Installing segfault handler",
+the translation cache at 42000000-42800000, natmem reserved at 0x80000000
+("Z3 REAL mapping. JIT direct compatible"), and the emulation runs until a
+clean shutdown.  A benchmark against the interpreter (SysInfo, AIBB with a
+real Kickstart) is still to be done.  On illumos the same code path applies
+but has not been tested yet.
 
-Apply these patches directly when you have downloaded the fs-uae sources from https://fs-uae.net/download#source (3.1.66 was the current version when I did this) and BEFORE running ./configure --disable-jit and make
+The JIT is used only when a configuration asks for it:
 
-# Howto apply patches
+```
+jit_compiler = 1
+cpu = 68040
+uae_cpu_24bit_addressing = false
+```
 
-Makefile.am.patch.txt
+The CPU must have 32-bit addressing: with the A1200's stock 68EC020
+(24-bit) the log says `Reverting to "indirect" access, because canbang is
+zero` and the JIT runs in its slower indirect mode.
 
-Makefile.in.patch.txt
+## Running
 
-configure.ac.patch.txt
+```sh
+fs-uae --amiga-model=A1200 --kickstart-file=kick31.rom \
+       --floppy-drive-0=disk.adf --chip-memory=2048 --fast-memory=8192
+```
 
-belong into the root directory of the fs-uae sources
+or with a configuration file (`fs-uae my-a1200.fs-uae`); see
+https://fs-uae.net/docs/options.
 
-sysdeps.h.patch.txt
+## Changes from the earlier version of this repository
 
-belongs into src/include of the fs-uae sources
+The patches used to ship as `fsuae-solaris-patches.tar.gz` with a README of
+manual steps.  They had three faults, fixed here:
 
-ip_icmp.h.patch.txt
-
-debug.h.h.patch.txt
-
-mbuf.h.patch.txt
-
-misc.h.patch.txt
-
-sbuf.h.patch.txt
-
-slirp.h.patch.txt
-
-socket.h.patch.txt
-
-tcp_timer.h.patch.txt
-
-udp.h.patch.txt
-
-belong into src/slirp of the fs-uae sources
-
-Copy the solaris folder into the dist folder of the fs-uae sources.
-
-** Solaris 11.4.42 CBE does not use endian.h but instead relies on byteorder.h so you have to update src/scp.cpp and libfsemu/src/data.c with the following updates:
-
-** add <sys/byteorder.h> and the two defines : #define le16toh(x) ntohs(x) #define le32toh(x) ntohl(x)
-
-** I forgot one patch which is adding <sys/filio.h> to "src/od-fs/bsdsocket_posix.cpp" to prevent FIONREAD compilation errors
-
-
-# Building fs-uae for Solaris 
-
-Before running configure do a "ac-local", "automake" to re-generate the correct "./configure and make" files then
-
-./configure --disable-jit
-
-make
-
-make install
-
-# Running fs-uae once you have build it there are several command line parameters
-
-./fs-uae 
-
-  --floppy-drive-0=xxxxx
-  
-  --kickstart-file=xxxxx
-  
-  --amiga-model=(A500/A1200/A4000) select one of them 
-  
-  --chip-memory=2048
-  
-  --fast-memory=8192
-  
-  --floppy-drive-count=4
-  
-  --hard-drive-0=(insert your hdf file here mine is PRODRIVE80.hdf) 
-  
-  
-Hope it works for you.
-
-Best
-
-Iggi
-
-
-
-
+- `Makefile.am.patch` was reversed (it turned the fixed file back into the
+  original).
+- `-lsocket -lnsl` and `dist/solaris` were patched into the generated
+  `Makefile.in` only, which the documented `aclocal`/`automake` step
+  regenerated -- and the patch had a typo (`lnsl`).  The libraries now go
+  into `LDFLAGS`, and `Makefile.in` is no longer patched.
+- The endian and `FIONREAD` fixes were only described in prose.  The
+  described endian fix, `#define le16toh(x) ntohs(x)`, is wrong on x86:
+  `ntohs` converts from big-endian, so it byte-swapped little-endian values
+  (zip archives, SCP disk images).  `0014-endian-solaris.patch` uses
+  `<sys/byteorder.h>`'s `LE_16()`/`LE_32()` instead.
